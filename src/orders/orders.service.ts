@@ -18,6 +18,7 @@ export class OrdersService {
         orderItems: {
           include: { product: true },
         },
+        paymentProof: true,
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -31,6 +32,7 @@ export class OrdersService {
         orderItems: {
           include: { product: true },
         },
+        paymentProof: true,
       },
     });
     if (!order) {
@@ -114,6 +116,15 @@ export class OrdersService {
     return this.prisma.order.update({
       where: { id },
       data: { status },
+    });
+  }
+
+  async uploadPaymentProof(orderId: number, imageUrl: string) {
+    await this.findOne(orderId);
+    return this.prisma.paymentProof.upsert({
+      where: { orderId },
+      create: { orderId, imageUrl },
+      update: { imageUrl },
     });
   }
 }

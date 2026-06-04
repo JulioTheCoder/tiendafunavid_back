@@ -16,9 +16,18 @@ export class CreateProductDto {
   @IsOptional()
   imageUrl?: string;
 
+  @IsUrl()
+  @IsOptional()
+  qrCodeUrl?: string;
+
   @IsNumber()
   @Min(0)
-  stock: number;
+  @IsOptional()
+  stock?: number;
+
+  @IsNumber()
+  @IsOptional()
+  categoryId?: number;
 }
 
 export class UpdateProductDto {
@@ -39,8 +48,16 @@ export class UpdateProductDto {
   @IsOptional()
   imageUrl?: string;
 
+  @IsUrl()
+  @IsOptional()
+  qrCodeUrl?: string;
+
   @IsNumber()
   @Min(0)
   @IsOptional()
   stock?: number;
+
+  @IsNumber()
+  @IsOptional()
+  categoryId?: number;
 }
