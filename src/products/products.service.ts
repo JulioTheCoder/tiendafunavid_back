@@ -9,6 +9,9 @@ export class ProductsService {
   async findAll() {
     return this.prisma.product.findMany({
       orderBy: { createdAt: 'desc' },
+      include: {
+      category: true,
+    },
     });
   }
 
