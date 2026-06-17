@@ -7,40 +7,39 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
-import { v4 as uuidv4 } from 'uuid';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Controller('uploads')
 export class UploadsController {
+  constructor(private readonly cloudinaryService: CloudinaryService) {}
+
   @Post('payment-proof')
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: diskStorage({
-        destination: './uploads/payment-proofs',
-        filename: (req, file, cb) => {
-          const uniqueName = `${uuidv4()}${extname(file.originalname)}`;
-          cb(null, uniqueName);
-        },
-      }),
+      limits: { fileSize: 10 * 1024 * 1024 },
       fileFilter: (req, file, cb) => {
         if (!file.mimetype.match(/\/(jpg|jpeg|png|gif)$/)) {
           return cb(
-            new BadRequestException('Solo se permiten imágenes'),
+            new BadRequestException(
+              'Solo se permiten imágenes (jpg, jpeg, png, gif)',
+            ),
             false,
           );
         }
         cb(null, true);
       },
-      limits: { fileSize: 10 * 1024 * 1024 },
     }),
   )
-  uploadPaymentProof(@UploadedFile() file: Express.Multer.File) {
+  async uploadPaymentProof(@UploadedFile() file: Express.Multer.File) {
+    const result = await this.cloudinaryService.uploadImage(
+      file,
+      'tiendafunavid/payment-proofs',
+    );
     return {
-      filename: file.filename,
-      url: `/uploads/payment-proofs/${file.filename}`,
+      url: result.url,
+      publicId: result.publicId,
     };
   }
 }

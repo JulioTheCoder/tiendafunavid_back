@@ -127,4 +127,31 @@ export class OrdersService {
       update: { imageUrl },
     });
   }
+
+  async delete(id: number) {
+    const order = await this.findOne(id);
+
+    await this.prisma.$transaction(async (tx) => {
+      for (const item of order.orderItems) {
+        await tx.product.update({
+          where: { id: item.productId },
+          data: { stock: { increment: item.quantity } },
+        });
+      }
+
+      await tx.paymentProof.deleteMany({
+        where: { orderId: id },
+      });
+
+      await tx.orderItem.deleteMany({
+        where: { orderId: id },
+      });
+
+      await tx.order.delete({
+        where: { id },
+      });
+    });
+
+    return { message: `Order #${id} deleted successfully` };
+  }
 }

@@ -42,72 +42,64 @@ async function main() {
     {
       name: 'Camiseta Estampada',
       description: 'Camiseta de algodón con diseño exclusivo. Disponible en tallas S, M, L, XL.',
-      price: 29.99,
+      price: 59000,
       imageUrl: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500',
-      qrCodeUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=CBU-001',
       stock: 50,
       categoryId: ropaCat.id,
     },
     {
       name: 'Pantalón Jeans Clásico',
       description: 'Pantalón jeans azul clásico, cómodo y duradero. Perfecto para uso diario.',
-      price: 59.99,
+      price: 159000,
       imageUrl: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=500',
-      qrCodeUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=CBU-002',
       stock: 30,
       categoryId: ropaCat.id,
     },
     {
       name: 'Zapatillas Deportivas',
       description: 'Zapatillas con suela acolchada, ideales para correr y actividades deportivas.',
-      price: 89.99,
+      price: 289000,
       imageUrl: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500',
-      qrCodeUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=ZAP-001',
       stock: 25,
       categoryId: calzadoCat.id,
     },
     {
       name: 'Bolso de Cuero',
       description: 'Bolso de cuero genuino, espacioso y elegante. Ideal para el trabajo o viajes.',
-      price: 119.99,
+      price: 350000,
       imageUrl: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=500',
-      qrCodeUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=BOL-001',
       stock: 15,
       categoryId: accesoriosCat.id,
     },
     {
       name: 'Gorra Baseball',
       description: 'Gorra ajustable con escudo bordado. Uno-size fits all.',
-      price: 19.99,
+      price: 45000,
       imageUrl: 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=500',
-      qrCodeUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=GOR-001',
       stock: 100,
       categoryId: accesoriosCat.id,
     },
     {
       name: 'Auriculares Inalámbricos',
       description: 'Auriculares Bluetooth con cancelación de ruido. Batería de 30 horas.',
-      price: 149.99,
+      price: 420000,
       imageUrl: 'https://images.unsplash.com/photo-1505740420928-5e560c06d6ab?w=500',
-      qrCodeUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=TEC-001',
       stock: 40,
       categoryId: tecnologiaCat.id,
     },
     {
       name: 'Mochila Urbana',
       description: 'Mochila resistente al agua con múltiples compartimentos. Capacidad 30L.',
-      price: 69.99,
+      price: 185000,
       imageUrl: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500',
-      qrCodeUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=MOC-001',
       stock: 35,
       categoryId: accesoriosCat.id,
     },
     {
       name: 'Reloj Smart',
       description: 'Reloj inteligente con monitor de salud, notificaciones y resistencia al agua.',
-      price: 199.99,
+      price: 650000,
       imageUrl: 'https://images.unsplash.com/photo-1523275335684-37801b7b0d03?w=500',
-      qrCodeUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=TEC-002',
       stock: 20,
       categoryId: tecnologiaCat.id,
     },
@@ -122,10 +114,10 @@ async function main() {
     data: {
       name: 'Juan Pérez',
       email: 'juan.perez@email.com',
-      phone: '+1234567890',
-      address: 'Calle Mayor 123',
-      city: 'Madrid',
-      postalCode: '28001',
+      phone: '+573001234567',
+      address: 'Calle 123 #45-67',
+      city: 'Bogotá',
+      postalCode: '11001',
     },
   });
   console.log(`Created customer: ${customer.name}`);
@@ -170,6 +162,7 @@ async function main() {
   console.log('Password: admin123');
   console.log('\n=== Categories ===');
   categories.forEach(c => console.log(`  - ${c.name}`));
+  console.log('\n=== Prices in COP (Colombian Pesos) ===');
 }
 
 main()

@@ -21,7 +21,7 @@ model Product {
   name        String      @db.VarChar(255)
   description String?     @db.Text
   price       Decimal     @db.Decimal(10, 2)
-  imageUrl    String?     @db.VarChar(500)
+  imageUrl    String?     @db.Text
   stock       Int         @default(0)
   categoryId  Int?
   createdAt   DateTime    @default(now())
@@ -75,11 +75,19 @@ model OrderItem {
 model PaymentProof {
   id              Int      @id @default(autoincrement())
   orderId         Int      @unique
-  imageUrl        String   @db.VarChar(500)
+  imageUrl        String   @db.Text
   uploadedAt      DateTime @default(now())
   order           Order    @relation(fields: [orderId], references: [id])
 
   @@map("payment_proofs")
+}
+
+model StoreConfig {
+  id        Int      @id @default(autoincrement())
+  qrCodeUrl String?  @db.Text
+  updatedAt DateTime @updatedAt
+
+  @@map("store_config")
 }
 
 model Admin {

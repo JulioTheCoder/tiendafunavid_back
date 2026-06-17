@@ -7,8 +7,10 @@ Backend API para tienda online construido con NestJS, Prisma ORM y MySQL.
 Sistema de tienda online donde:
 - El **administrador** puede gestionar productos (CRUD completo) mediante autenticación JWT
 - El **cliente** puede realizar compras sin cuenta, proporcionando solo datos de envío
-- Los productos tienen categorías y códigos QR para pago
+- Los productos tienen categorías e imágenes almacenadas en Cloudinary
+- La tienda tiene un QR único de pago para todos los productos
 - El cliente sube comprobante de pago para validar su pedido
+- **Todos los precios están en Pesos Colombianos (COP)**
 
 ## Requisitos
 
@@ -41,6 +43,11 @@ Crear archivo `.env` en la raíz:
 DATABASE_URL="mysql://user:password@localhost:3306/tiendafunavid"
 PORT=3000
 JWT_SECRET="your_secret_key_here"
+
+# Cloudinary Configuration
+CLOUDINARY_CLOUD_NAME="your_cloud_name"
+CLOUDINARY_API_KEY="your_api_key"
+CLOUDINARY_API_SECRET="your_api_secret"
 ```
 
 ## Ejecutar
@@ -95,7 +102,14 @@ src/
 │   ├── orders.module.ts
 │   └── dto/
 │       └── create-order.dto.ts
-└── uploads/                    # Módulo de uploads
+├── cloudinary/                # Módulo de Cloudinary
+│   ├── cloudinary.service.ts
+│   └── cloudinary.module.ts
+├── store-config/               # Módulo de configuración de tienda
+│   ├── store-config.controller.ts
+│   ├── store-config.service.ts
+│   └── store-config.module.ts
+└── uploads/                   # Módulo de uploads
     └── uploads.controller.ts
 ```
 
@@ -110,6 +124,13 @@ src/
 | name | String | Nombre del admin |
 | createdAt | DateTime | Fecha creación |
 
+### StoreConfig
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| id | Int | ID único (auto) |
+| qrCodeUrl | String? | URL del QR general de pago |
+| updatedAt | DateTime | Fecha última actualización |
+
 ### Category
 | Campo | Tipo | Descripción |
 |-------|------|-------------|
@@ -123,9 +144,8 @@ src/
 | id | Int | ID único (auto) |
 | name | String | Nombre del producto |
 | description | String? | Descripción opcional |
-| price | Decimal | Precio (2 decimales) |
-| imageUrl | String? | URL de imagen del producto |
-| qrCodeUrl | String? | URL del código QR para pago |
+| price | Decimal | Precio en COP (Pesos Colombianos) |
+| imageUrl | String? | URL de imagen del producto (Cloudinary) |
 | stock | Int | Cantidad disponible |
 | categoryId | Int? | FK a Category |
 | createdAt | DateTime | Fecha creación |
@@ -222,18 +242,30 @@ Authorization: Bearer <access_token>
 |--------|------|------|-------------|
 | GET | /products | No | Listar todos los productos |
 | GET | /products/:id | No | Obtener producto por ID |
-| POST | /products | Sí | Crear producto (admin) |
+| POST | /products | Sí | Crear producto (datos JSON) |
+| POST | /products/with-image | Sí | Crear producto con imagen |
 | PUT | /products/:id | Sí | Actualizar producto (admin) |
+| PUT | /products/:id/with-image | Sí | Actualizar producto con imagen |
 | DELETE | /products/:id | Sí | Eliminar producto (admin) |
+| POST | /products/upload-image | Sí | Subir imagen (standalone) |
 
-#### POST /products - Ejemplo
+#### POST /products/with-image - Ejemplo (multipart/form-data)
+```
+ name: "Camiseta"
+ description: "Camiseta de algodón"
+ price: 59000
+ stock: 100
+ categoryId: 1
+ image: [archivo.jpg]
+```
+
+#### POST /products - Ejemplo (JSON)
 ```json
 {
   "name": "Camiseta",
   "description": "Camiseta de algodón",
-  "price": 29.99,
-  "imageUrl": "https://example.com/camiseta.jpg",
-  "qrCodeUrl": "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=PAGO-001",
+  "price": 59000,
+  "imageUrl": "https://res.cloudinary.com/...",
   "stock": 100,
   "categoryId": 1
 }
@@ -256,6 +288,7 @@ Authorization: Bearer <access_token>
 | POST | /orders | No | Crear pedido (checkout) |
 | PATCH | /orders/:id/status | Sí | Actualizar estado (admin) |
 | PATCH | /orders/:id/payment-proof | No | Subir comprobante de pago |
+| DELETE | /orders/:id | Sí | Eliminar pedido (admin) |
 
 #### POST /orders - Ejemplo
 ```json
@@ -280,19 +313,29 @@ Authorization: Bearer <access_token>
 
 Estados válidos: `PENDING`, `PAID`, `SHIPPED`, `DELIVERED`, `CANCELLED`
 
-### Upload de Comprobantes
+### Configuración de la Tienda
 
 | Método | Ruta | Auth | Descripción |
 |--------|------|------|-------------|
-| POST | /uploads/payment-proof | Sí | Subir imagen de comprobante (admin) |
+| GET | /store-config/qr | No | Obtener QR de pago general |
+| PATCH | /store-config/qr | Sí | Subir QR de pago general |
 
-El comprobante se sube como archivo multipart/form-data con el campo `file`.
+El QR de pago es único para toda la tienda y se usa para comprar cualquier producto.
+
+### Upload de Imágenes (Cloudinary)
+
+| Método | Ruta | Auth | Descripción |
+|--------|------|------|-------------|
+| POST | /products/upload-image | Sí | Subir imagen de producto |
+| POST | /uploads/payment-proof | Sí | Subir comprobante de pago |
+
+Las imágenes se suben a Cloudinary y se retornan las URLs seguras.
 
 #### Flujo de Pago
 
-1. Cliente realiza pedido → Estado `PENDING`
-2. Admin genera QR de pago (asociado al producto) o lo comparte al cliente
-3. Cliente paga mediante QR y sube comprobante → `PATCH /orders/:id/payment-proof`
+1. Cliente consulta el QR general → `GET /store-config/qr`
+2. Cliente realiza pedido → Estado `PENDING`
+3. Cliente paga mediante el QR general y sube comprobante → `PATCH /orders/:id/payment-proof`
 4. Admin verifica comprobante → `PATCH /orders/:id/status` → `PAID`
 
 ## Linting y Pruebas
@@ -311,7 +354,7 @@ El script `prisma/seed.ts` crea:
 
 - **1 Admin**: `admin@tiendafunavid.com` / `admin123`
 - **4 Categorías**: Ropa, Calzado, Accesorios, Tecnología
-- **8 Productos**: Con categorías y códigos QR de ejemplo
+- **8 Productos**: Con categorías e imágenes en Cloudinary
 - **1 Cliente**: Juan Pérez
 - **1 Pedido**: Orden de ejemplo con estado PENDING
 
@@ -322,5 +365,6 @@ El script `prisma/seed.ts` crea:
 - Clientes nuevos se crean automáticamente al hacer un pedido si el email no existe
 - Las rutas POST, PUT, DELETE de productos requieren autenticación JWT
 - El token JWT expira en 24 horas
-- Los comprobantes de pago se almacenan en `uploads/payment-proofs/`
-- Acceso a comprobantes: `http://localhost:3000/uploads/payment-proofs/{filename}`
+- Todos los precios están en Pesos Colombianos (COP)
+- Las imágenes se suben a Cloudinary (no se almacenan localmente)
+- El QR de pago es único para toda la tienda (configurado por el admin)

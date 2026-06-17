@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Body,
   Param,
   ParseIntPipe,
@@ -47,5 +48,11 @@ export class OrdersController {
     @Body('imageUrl') imageUrl: string,
   ) {
     return this.ordersService.uploadPaymentProof(id, imageUrl);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard)
+  delete(@Param('id', ParseIntPipe) id: number) {
+    return this.ordersService.delete(id);
   }
 }

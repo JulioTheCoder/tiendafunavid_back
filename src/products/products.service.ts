@@ -10,8 +10,8 @@ export class ProductsService {
     return this.prisma.product.findMany({
       orderBy: { createdAt: 'desc' },
       include: {
-      category: true,
-    },
+        category: true,
+      },
     });
   }
 
@@ -28,10 +28,11 @@ export class ProductsService {
   async create(data: CreateProductDto) {
     return this.prisma.product.create({
       data: {
-        ...data,
-        price: data.price,
-        stock: data.stock,
-      },
+      ...data,
+      price: Number(data.price),  
+      stock: Number(data.stock),   
+      categoryId: Number(data.categoryId), 
+    },
     });
   }
 
@@ -39,7 +40,12 @@ export class ProductsService {
     await this.findOne(id);
     return this.prisma.product.update({
       where: { id },
-      data,
+      data:{
+      ...data,
+      ...(data.price && { price: Number(data.price) }),
+      ...(data.stock && { stock: Number(data.stock) }),
+      ...(data.categoryId && { categoryId: Number(data.categoryId) }),
+    },
     });
   }
 
