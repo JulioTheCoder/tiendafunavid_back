@@ -47,15 +47,25 @@ model Customer {
 }
 
 model Order {
-  id            Int           @id @default(autoincrement())
-  customerId    Int
-  total         Decimal       @db.Decimal(10, 2)
-  status        OrderStatus   @default(PENDING)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  customer      Customer      @relation(fields: [customerId], references: [id])
-  orderItems    OrderItem[]
-  paymentProof  PaymentProof?
+  id                  Int           @id @default(autoincrement())
+  customerId          Int
+  total               Decimal       @db.Decimal(10, 2)
+  status              OrderStatus   @default(PENDING)
+
+  // Copia histórica de los datos utilizados en esta compra.
+  // Son opcionales para que la migración funcione con pedidos ya existentes.
+  customerName        String?       @db.VarChar(255)
+  customerEmail       String?       @db.VarChar(255)
+  customerPhone       String?       @db.VarChar(50)
+  shippingAddress     String?       @db.Text
+  shippingCity        String?       @db.VarChar(100)
+  shippingPostalCode  String?       @db.VarChar(20)
+
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  customer            Customer      @relation(fields: [customerId], references: [id])
+  orderItems          OrderItem[]
+  paymentProof        PaymentProof?
 
   @@map("orders")
 }

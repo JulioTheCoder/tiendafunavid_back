@@ -55,22 +55,24 @@ export class OrdersService {
 
   async create(data: CreateOrderDto) {
     return this.prisma.$transaction(async (tx) => {
-      let customer = await tx.customer.findFirst({
-        where: { email: data.customerEmail },
-      });
+      const normalizedEmail =
+        data.customerEmail.trim().toLowerCase();
 
-      if (!customer) {
-        customer = await tx.customer.create({
-          data: {
-            name: data.customerName,
-            email: data.customerEmail,
-            phone: data.customerPhone,
-            address: data.shippingAddress,
-            city: data.shippingCity,
-            postalCode: data.shippingPostalCode,
-          },
-        });
-      }
+      /*
+       * Cada compra crea un cliente nuevo, incluso cuando
+       * el correo ya existe en la tabla customers.
+       */
+      const customer = await tx.customer.create({
+        data: {
+          name: data.customerName.trim(),
+          email: normalizedEmail,
+          phone: data.customerPhone?.trim() || null,
+          address: data.shippingAddress.trim(),
+          city: data.shippingCity.trim(),
+          postalCode:
+            data.shippingPostalCode?.trim() || null,
+        },
+      });
 
       const orderItemsData = await Promise.all(
         data.items.map(async (item) => {
@@ -109,13 +111,27 @@ export class OrdersService {
           customerId: customer.id,
           total,
           status: OrderStatus.PENDING,
+
+          // Conserva exactamente los datos escritos para esta compra,
+          // aunque el mismo correo sea utilizado en pedidos posteriores.
+          customerName: data.customerName.trim(),
+          customerEmail: data.customerEmail.trim().toLowerCase(),
+          customerPhone: data.customerPhone?.trim() || null,
+          shippingAddress: data.shippingAddress.trim(),
+          shippingCity: data.shippingCity.trim(),
+          shippingPostalCode:
+            data.shippingPostalCode?.trim() || null,
+
           orderItems: {
             create: orderItemsData,
           },
-          ... (data.paymentProof && {
-              paymentProof: {
-              create: { imageUrl: data.paymentProof },
+
+          ...(data.paymentProof && {
+            paymentProof: {
+              create: {
+                imageUrl: data.paymentProof,
               },
+            },
           }),
         },
      
@@ -123,13 +139,14 @@ export class OrdersService {
           customer: true,
           orderItems: {
             include: {
-            product: {
-              include: {
-                category: true,
+              product: {
+                include: {
+                  category: true,
+                },
               },
             },
           },
-          },
+          paymentProof: true,
         },
       });
     });
@@ -174,8 +191,29 @@ export class OrdersService {
       await tx.order.delete({
         where: { id },
       });
+
+      /*
+       * Elimina el cliente solamente cuando ya no tiene
+       * ninguna orden asociada. Esto protege registros
+       * antiguos que podrían compartir el mismo customerId.
+       */
+      const remainingOrders = await tx.order.count({
+        where: {
+          customerId: order.customerId,
+        },
+      });
+
+      if (remainingOrders === 0) {
+        await tx.customer.delete({
+          where: {
+            id: order.customerId,
+          },
+        });
+      }
     });
 
-    return { message: `Order #${id} deleted successfully` };
+    return {
+      message: `Order #${id} deleted successfully`,
+    };
   }
 }
