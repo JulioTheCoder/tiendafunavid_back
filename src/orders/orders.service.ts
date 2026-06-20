@@ -100,7 +100,13 @@ export class OrdersService {
           orderItems: {
             create: orderItemsData,
           },
+          ... (data.paymentProof && {
+              paymentProof: {
+              create: { imageUrl: data.paymentProof },
+              },
+          }),
         },
+     
         include: {
           customer: true,
           orderItems: {

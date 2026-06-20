@@ -4,9 +4,11 @@ import {
   IsEmail,
   IsNumber,
   IsOptional,
-  IsString,
+  isString,
+  IsUrl,
   ValidateNested,
   Min,
+  IsString,
 } from 'class-validator';
 
 export class OrderItemDto {
@@ -38,6 +40,10 @@ export class CreateOrderDto {
   @IsString()
   @IsOptional()
   shippingPostalCode?: string;
+
+  @IsString()
+  @IsOptional()
+  paymentProof?: string;
 
   @IsArray()
   @ValidateNested({ each: true })

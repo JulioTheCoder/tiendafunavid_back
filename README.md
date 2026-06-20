@@ -129,6 +129,9 @@ src/
 |-------|------|-------------|
 | id | Int | ID único (auto) |
 | qrCodeUrl | String? | URL del QR general de pago |
+| bankName | String? | Nombre del banco |
+| accountName | String? | Nombre de la cuenta |
+| accountNumber | String? | Número de cuenta bancaria |
 | updatedAt | DateTime | Fecha última actualización |
 
 ### Category
@@ -317,10 +320,30 @@ Estados válidos: `PENDING`, `PAID`, `SHIPPED`, `DELIVERED`, `CANCELLED`
 
 | Método | Ruta | Auth | Descripción |
 |--------|------|------|-------------|
-| GET | /store-config/qr | No | Obtener QR de pago general |
-| PATCH | /store-config/qr | Sí | Subir QR de pago general |
+| GET | /store-config | No | Obtener toda la configuración |
+| PATCH | /store-config | Sí | Actualizar datos bancarios |
+| PATCH | /store-config/qr | Sí | Subir QR de pago |
 
-El QR de pago es único para toda la tienda y se usa para comprar cualquier producto.
+#### GET /store-config - Respuesta
+```json
+{
+  "qrCodeUrl": "https://res.cloudinary.com/...",
+  "bankName": "Banco de Bogotá",
+  "accountName": "Tienda Funavid",
+  "accountNumber": "1234567890"
+}
+```
+
+#### PATCH /store-config - Ejemplo
+```json
+{
+  "bankName": "Banco de Bogotá",
+  "accountName": "Tienda Funavid",
+  "accountNumber": "1234567890"
+}
+```
+
+El cliente consulta la configuración para ver los datos de pago y el QR.
 
 ### Upload de Imágenes (Cloudinary)
 
@@ -333,9 +356,9 @@ Las imágenes se suben a Cloudinary y se retornan las URLs seguras.
 
 #### Flujo de Pago
 
-1. Cliente consulta el QR general → `GET /store-config/qr`
+1. Cliente consulta los datos de pago → `GET /store-config`
 2. Cliente realiza pedido → Estado `PENDING`
-3. Cliente paga mediante el QR general y sube comprobante → `PATCH /orders/:id/payment-proof`
+3. Cliente paga mediante transferencia y sube comprobante → `PATCH /orders/:id/payment-proof`
 4. Admin verifica comprobante → `PATCH /orders/:id/status` → `PAID`
 
 ## Linting y Pruebas

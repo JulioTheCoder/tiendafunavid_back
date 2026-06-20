@@ -5,7 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 export class StoreConfigService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getQrCode() {
+  async getConfig() {
     let config = await this.prisma.storeConfig.findFirst();
 
     if (!config) {
@@ -14,23 +14,38 @@ export class StoreConfigService {
       });
     }
 
-    return { qrCodeUrl: config.qrCodeUrl };
+    return {
+      qrCodeUrl: config.qrCodeUrl,
+      bankName: config.bankName,
+      accountName: config.accountName,
+      accountNumber: config.accountNumber,
+    };
   }
 
-  async updateQrCode(qrCodeUrl: string) {
+  async updateConfig(data: {
+    qrCodeUrl?: string;
+    bankName?: string;
+    accountName?: string;
+    accountNumber?: string;
+  }) {
     let config = await this.prisma.storeConfig.findFirst();
 
     if (!config) {
       config = await this.prisma.storeConfig.create({
-        data: { qrCodeUrl },
+        data,
       });
     } else {
       config = await this.prisma.storeConfig.update({
         where: { id: config.id },
-        data: { qrCodeUrl },
+        data,
       });
     }
 
-    return { qrCodeUrl: config.qrCodeUrl };
+    return {
+      qrCodeUrl: config.qrCodeUrl,
+      bankName: config.bankName,
+      accountName: config.accountName,
+      accountNumber: config.accountNumber,
+    };
   }
 }

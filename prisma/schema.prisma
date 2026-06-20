@@ -83,9 +83,12 @@ model PaymentProof {
 }
 
 model StoreConfig {
-  id        Int      @id @default(autoincrement())
-  qrCodeUrl String?  @db.Text
-  updatedAt DateTime @updatedAt
+  id           Int      @id @default(autoincrement())
+  qrCodeUrl    String?  @db.Text
+  bankName     String?  @db.VarChar(100)
+  accountName  String?  @db.VarChar(255)
+  accountNumber String? @db.VarChar(50)
+  updatedAt    DateTime @updatedAt
 
   @@map("store_config")
 }
