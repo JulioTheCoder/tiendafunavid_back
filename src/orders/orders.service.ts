@@ -16,7 +16,13 @@ export class OrdersService {
       include: {
         customer: true,
         orderItems: {
-          include: { product: true },
+          include: {
+            product: {
+              include: {
+                category: true,
+              },
+            },
+          },
         },
         paymentProof: true,
       },
@@ -30,7 +36,13 @@ export class OrdersService {
       include: {
         customer: true,
         orderItems: {
-          include: { product: true },
+          include: {
+            product: {
+              include: {
+                category: true,
+              },
+            },
+          },
         },
         paymentProof: true,
       },
@@ -110,7 +122,13 @@ export class OrdersService {
         include: {
           customer: true,
           orderItems: {
-            include: { product: true },
+            include: {
+            product: {
+              include: {
+                category: true,
+              },
+            },
+          },
           },
         },
       });
